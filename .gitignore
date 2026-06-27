@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.log
+*.dll
+*.exe
+*.pdb
+*.nupkg
+.nuget/
+appsettings.Development.json
+.env
+*.secret.*
