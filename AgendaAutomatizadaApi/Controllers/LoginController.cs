@@ -1,6 +1,7 @@
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
 using AgendaAutomatizada.Service.Services;
+using AgendaAutomatizada.Service.Shared;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 
@@ -15,23 +16,19 @@ public class LoginEndpoint : Endpoint<LoginRequest, UsuarioResponse>
 
     public override void Configure()
     {
-        Post("/api/usuario/login");
+        Post("/api/auth/login");
         AllowAnonymous();
+        Tags("Auth");
     }
 
     public override async Task HandleAsync(LoginRequest requisicao, CancellationToken ct)
     {
-        try
-        {
-            var usuario = await _usuarioService.AutenticarUsuario(requisicao.Email, requisicao.Senha);
+        var resultado = await _usuarioService.AutenticarUsuario(requisicao.Email, requisicao.Senha);
 
-            var resposta = usuario.ToResponse(Guid.NewGuid().ToString());
+        if (await resultado.SendErrorIfFailedAsync(HttpContext, ct))
+            return;
 
-            await Send.OkAsync(resposta, cancellation: ct);
-        }
-        catch (InvalidOperationException ex)
-        {
-            ThrowError(ex.Message);
-        }
+        var resposta = resultado.Dados!.ToResponse();
+        await Send.OkAsync(resposta, cancellation: ct);
     }
 }

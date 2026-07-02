@@ -1,44 +1,37 @@
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
-using AgendaAutomatizada.Domain.Interfaces;
 using AgendaAutomatizada.Service.Services;
+using AgendaAutomatizada.Service.Shared;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 
 public class CriarUsuarioEndpoint : Endpoint<UsuarioRequest, UsuarioResponse>
 {
     private readonly UsuarioService _usuarioService;
-    private readonly ITokenService _tokenService;
 
-    public CriarUsuarioEndpoint(UsuarioService usuarioService, ITokenService tokenService)
+    public CriarUsuarioEndpoint(UsuarioService usuarioService)
     {
         _usuarioService = usuarioService;
-        _tokenService = tokenService;
     }
 
     public override void Configure()
     {
-        Post("/api/usuario");
+        Post("/api/usuarios");
         AllowAnonymous();
+        Tags("Usuários");
     }
 
     public override async Task HandleAsync(UsuarioRequest usuarioRequisicao, CancellationToken ct)
     {
-        try
-        {
-            var usuarioEntity = usuarioRequisicao.ToEntity();
+        var usuarioEntity = usuarioRequisicao.ToEntity();
 
-            var usuario = await _usuarioService.CriarUsuario(usuarioEntity, usuarioRequisicao.Senha);
+        var resultado = await _usuarioService.CriarUsuario(usuarioEntity, usuarioRequisicao.Senha);
 
-            var token = _tokenService.GerarToken(usuario);
-            var resposta = usuario.ToResponse(token);
+        if (await resultado.SendErrorIfFailedAsync(HttpContext, ct))
+            return;
 
-            await Send.ResponseAsync(resposta, statusCode: 201, cancellation: ct);
-        }
-        catch (InvalidOperationException ex)
-        {
-            ThrowError(ex.Message);
-        }
+        var resposta = resultado.Dados!.ToResponse();
+        await Send.ResponseAsync(resposta, statusCode: 201, cancellation: ct);
     }
 }
 
