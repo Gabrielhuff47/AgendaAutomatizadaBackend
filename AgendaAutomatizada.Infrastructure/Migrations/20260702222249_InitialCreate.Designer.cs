@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AgendaAutomatizada.Infrastructure.Migrations
 {
     [DbContext(typeof(AgendaDbContext))]
-    [Migration("20260702012258_InitialCreate")]
+    [Migration("20260702222249_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,44 @@ namespace AgendaAutomatizada.Infrastructure.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("AgendaAutomatizada.Domain.Entities.Usuario", b =>
+            modelBuilder.Entity("AgendaAutomatizada.Domain.Entities.TarefaEntity", b =>
+                {
+                    b.Property<int>("IdTarefa")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdTarefa"));
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataAtualizacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("UsuarioAtualizacao")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("IdTarefa");
+
+                    b.ToTable("Tarefas", (string)null);
+                });
+
+            modelBuilder.Entity("AgendaAutomatizada.Domain.Entities.UsuarioEntity", b =>
                 {
                     b.Property<int>("IdUsuario")
                         .ValueGeneratedOnAdd()

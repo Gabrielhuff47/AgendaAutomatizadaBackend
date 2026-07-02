@@ -1,8 +1,6 @@
-using System.Text;
+using System.Text.Json;
 using FastEndpoints;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using AgendaAutomatizada.Domain.Interfaces;
 using AgendaAutomatizada.Infrastructure.Data;
 using AgendaAutomatizada.Infrastructure.Repositories;
@@ -21,8 +19,9 @@ builder.Services.AddFastEndpoints();
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ITarefaRepository, TarefaRepository>();
 builder.Services.AddScoped<UsuarioService>();
-
+builder.Services.AddScoped<TarefaService>();
 builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -30,7 +29,23 @@ builder.Services.AddDbContext<AgendaDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 var app = builder.Build();
-app.UseFastEndpoints();
+app.UseFastEndpoints(c =>
+{
+    c.Errors.ResponseBuilder = (failures, ctx, statusCode) =>
+    {
+        return new
+        {
+            statusCode,
+            mensagem = "Não foi possível processar a requisição. Corrija os erros abaixo:",
+            erros = failures
+                .GroupBy(f => f.PropertyName)
+                .ToDictionary(
+                    g => JsonNamingPolicy.CamelCase.ConvertName(g.Key),
+                    g => g.Select(f => f.ErrorMessage).ToArray()
+                )
+        };
+    };
+});
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -40,7 +55,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

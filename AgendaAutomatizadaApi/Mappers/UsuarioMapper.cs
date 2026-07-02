@@ -17,14 +17,13 @@ public static class UsuarioMapper
         };
     }
 
-    public static UsuarioResponse ToResponse(this UsuarioEntity usuario, string token)
+    public static UsuarioResponse ToResponse(this UsuarioEntity usuario)
     {
         return new UsuarioResponse
         {
             IdUsuario = usuario.IdUsuario,
             Nome = usuario.Nome,
-            Email = usuario.Email,
-            Token = token
+            Email = usuario.Email
         };
     }
 }

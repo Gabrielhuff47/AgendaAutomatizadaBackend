@@ -1,5 +1,6 @@
 using AgendaAutomatizada.Domain.Entities;
 using AgendaAutomatizada.Domain.Interfaces;
+using AgendaAutomatizada.Service.Shared;
 
 namespace AgendaAutomatizada.Service.Services;
 
@@ -14,34 +15,35 @@ public class UsuarioService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<UsuarioEntity> CriarUsuario(UsuarioEntity usuario, string senha)
+    public async Task<Result<UsuarioEntity>> CriarUsuario(UsuarioEntity usuario, string senha)
     {
         var emailExists = await _usuarioRepository.ObterUsuarioPorEmail(usuario.Email);
         if (emailExists is not null)
-            throw new InvalidOperationException("E-mail já cadastrado.");
+            return Result<UsuarioEntity>.Falha("E-mail já cadastrado.", TipoErro.Conflito);
 
         var cpfExists = await _usuarioRepository.ObterUsuarioPorCpf(usuario.Cpf);
         if (cpfExists is not null)
-            throw new InvalidOperationException("CPF já cadastrado.");
+            return Result<UsuarioEntity>.Falha("CPF já cadastrado.", TipoErro.Conflito);
 
         usuario.SenhaHash = _passwordHasher.Hash(senha);
         usuario.DataCriacao = DateTime.UtcNow;
         usuario.UsuarioAtualizacao = usuario.Nome;
         usuario.DataAtualizacao = DateTime.UtcNow;
 
-        return await _usuarioRepository.CriarUsuario(usuario);
+        var usuarioCriado = await _usuarioRepository.CriarUsuario(usuario);
+        return Result<UsuarioEntity>.Ok(usuarioCriado);
     }
 
-    public async Task<UsuarioEntity> AutenticarUsuario(string email, string senha)
+    public async Task<Result<UsuarioEntity>> AutenticarUsuario(string email, string senha)
     {
         var usuario = await _usuarioRepository.ObterUsuarioPorEmail(email);
         if (usuario is null)
-            throw new InvalidOperationException("entre com um usuário e senha corretos");
+            return Result<UsuarioEntity>.Falha("Entre com um usuário e senha corretos", TipoErro.NaoAutorizado);
 
         var senhaValida = _passwordHasher.Verify(senha, usuario.SenhaHash);
         if (!senhaValida)
-            throw new InvalidOperationException("entre com um usuário e senha corretos");
+            return Result<UsuarioEntity>.Falha("Entre com um usuário e senha corretos", TipoErro.NaoAutorizado);
 
-        return usuario;
+        return Result<UsuarioEntity>.Ok(usuario);
     }
 }
