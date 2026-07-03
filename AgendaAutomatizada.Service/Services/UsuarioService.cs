@@ -1,10 +1,11 @@
 using AgendaAutomatizada.Domain.Entities;
 using AgendaAutomatizada.Domain.Interfaces;
+using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Shared;
 
 namespace AgendaAutomatizada.Service.Services;
 
-public class UsuarioService
+public class UsuarioService : IUsuarioService
 {
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPasswordHasher _passwordHasher;

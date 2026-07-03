@@ -1,15 +1,15 @@
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
-using AgendaAutomatizada.Service.Services;
+using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Shared;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 
 public class CriarUsuarioEndpoint : Endpoint<UsuarioRequest, UsuarioResponse>
 {
-    private readonly UsuarioService _usuarioService;
+    private readonly IUsuarioService _usuarioService;
 
-    public CriarUsuarioEndpoint(UsuarioService usuarioService)
+    public CriarUsuarioEndpoint(IUsuarioService usuarioService)
     {
         _usuarioService = usuarioService;
     }

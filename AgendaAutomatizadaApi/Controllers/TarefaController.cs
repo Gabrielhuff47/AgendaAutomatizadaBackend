@@ -1,15 +1,15 @@
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
-using AgendaAutomatizada.Service.Services;
+using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Shared;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 
 public class CriarTarefaEndpoint : Endpoint<TarefaRequest, TarefaResponse>
 {
-    private readonly TarefaService _tarefaService;
+    private readonly ITarefaService _tarefaService;
 
-    public CriarTarefaEndpoint(TarefaService tarefaService)
+    public CriarTarefaEndpoint(ITarefaService tarefaService)
     {
         _tarefaService = tarefaService;
     }
@@ -37,9 +37,9 @@ public class CriarTarefaEndpoint : Endpoint<TarefaRequest, TarefaResponse>
 
 public class ListarTarefasEndpoint : EndpointWithoutRequest<List<TarefaResponse>>
 {
-    private readonly TarefaService _tarefaService;
+    private readonly ITarefaService _tarefaService;
 
-    public ListarTarefasEndpoint(TarefaService tarefaService)
+    public ListarTarefasEndpoint(ITarefaService tarefaService)
     {
         _tarefaService = tarefaService;
     }
@@ -65,9 +65,9 @@ public class ListarTarefasEndpoint : EndpointWithoutRequest<List<TarefaResponse>
 
 public class ObterTarefaEndpoint : EndpointWithoutRequest<TarefaResponse>
 {
-    private readonly TarefaService _tarefaService;
+    private readonly ITarefaService _tarefaService;
 
-    public ObterTarefaEndpoint(TarefaService tarefaService)
+    public ObterTarefaEndpoint(ITarefaService tarefaService)
     {
         _tarefaService = tarefaService;
     }
@@ -95,9 +95,9 @@ public class ObterTarefaEndpoint : EndpointWithoutRequest<TarefaResponse>
 
 public class AtualizarTarefaEndpoint : Endpoint<TarefaRequest, TarefaResponse>
 {
-    private readonly TarefaService _tarefaService;
+    private readonly ITarefaService _tarefaService;
 
-    public AtualizarTarefaEndpoint(TarefaService tarefaService)
+    public AtualizarTarefaEndpoint(ITarefaService tarefaService)
     {
         _tarefaService = tarefaService;
     }
@@ -126,9 +126,9 @@ public class AtualizarTarefaEndpoint : Endpoint<TarefaRequest, TarefaResponse>
 
 public class DeletarTarefaEndpoint : EndpointWithoutRequest
 {
-    private readonly TarefaService _tarefaService;
+    private readonly ITarefaService _tarefaService;
 
-    public DeletarTarefaEndpoint(TarefaService tarefaService)
+    public DeletarTarefaEndpoint(ITarefaService tarefaService)
     {
         _tarefaService = tarefaService;
     }
