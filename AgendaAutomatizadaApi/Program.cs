@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AgendaAutomatizada.Domain.Interfaces;
 using AgendaAutomatizada.Infrastructure.Data;
 using AgendaAutomatizada.Infrastructure.Repositories;
+using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Services;
 using AgendaAutomatizada.Service.Shared;
 
@@ -20,8 +21,8 @@ builder.Services.AddFastEndpoints();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ITarefaRepository, TarefaRepository>();
-builder.Services.AddScoped<UsuarioService>();
-builder.Services.AddScoped<TarefaService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<ITarefaService, TarefaService>();
 builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

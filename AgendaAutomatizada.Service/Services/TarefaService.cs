@@ -1,10 +1,11 @@
 using AgendaAutomatizada.Domain.Entities;
 using AgendaAutomatizada.Domain.Interfaces;
+using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Shared;
 
 namespace AgendaAutomatizada.Service.Services;
 
-public class TarefaService
+public class TarefaService : ITarefaService
 {
     private readonly ITarefaRepository _tarefaRepository;
 

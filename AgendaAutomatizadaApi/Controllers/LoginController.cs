@@ -1,15 +1,15 @@
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
-using AgendaAutomatizada.Service.Services;
+using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Shared;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 
 public class LoginEndpoint : Endpoint<LoginRequest, UsuarioResponse>
 {
-    private readonly UsuarioService _usuarioService;
+    private readonly IUsuarioService _usuarioService;
 
-    public LoginEndpoint(UsuarioService usuarioService)
+    public LoginEndpoint(IUsuarioService usuarioService)
     {
         _usuarioService = usuarioService;
     }
