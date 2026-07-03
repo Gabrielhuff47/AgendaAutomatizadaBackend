@@ -17,7 +17,11 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddFastEndpoints().SwaggerDocument();;
+builder.Services.AddFastEndpoints()
+    .SwaggerDocument(o =>
+    {
+        o.AutoTagPathSegmentIndex = 2; 
+    });
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();

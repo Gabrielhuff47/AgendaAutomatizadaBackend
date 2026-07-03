@@ -18,7 +18,7 @@ public class CriarUsuarioEndpoint : Endpoint<UsuarioRequest, UsuarioResponse>
     {
         Post("/api/usuarios");
         AllowAnonymous();
-        Tags("Usuários");
+        Tags("Usuarios");
     }
 
     public override async Task HandleAsync(UsuarioRequest usuarioRequisicao, CancellationToken ct)
