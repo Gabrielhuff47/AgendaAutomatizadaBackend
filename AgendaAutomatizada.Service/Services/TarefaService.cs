@@ -57,8 +57,6 @@ public class TarefaService : ITarefaService
 
     public async Task<Result> DeletarTarefaPorId(int id)
     {
-        
-    Console.WriteLine($"Tentando deletar tarefa com ID: {id}");
         var deletado = await _tarefaRepository.DeletarTarefaPorId(id);
         if (!deletado)
             return Result.Falha("Nenhuma tarefa encontrada", TipoErro.NaoEncontrado);
