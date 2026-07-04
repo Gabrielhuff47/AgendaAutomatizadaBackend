@@ -20,6 +20,10 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AgendaAutomatizada.Tests" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AgendaAutomatizada.Infrastructure\AgendaAutomatizada.Infrastructure.csproj" />
     <ProjectReference Include="..\AgendaAutomatizada.Service\AgendaAutomatizada.Service.csproj" />
