@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
+using AgendaAutomatizada.Infrastructure.Data;
 using AgendaAutomatizadaApi;
 
 namespace AgendaAutomatizada.Tests.Integration;
@@ -32,8 +35,8 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     {
         var request = new TarefaRequest
         {
-            Titulo = "Reunião de planejamento",
-            Descricao = "Discutir metas do próximo trimestre",
+            Titulo = "Reuniao de planejamento",
+            Descricao = "Discutir metas do proximo trimestre",
             Data = DateTime.UtcNow.AddDays(1)
         };
 
@@ -45,6 +48,14 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(request.Titulo, tarefa.Titulo);
         Assert.Equal(request.Descricao, tarefa.Descricao);
         Assert.True(tarefa.IdTarefa > 0);
+
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        var tarefaNoBanco = await dbContext.Tarefas.FirstOrDefaultAsync(t => t.IdTarefa == tarefa.IdTarefa);
+
+        Assert.NotNull(tarefaNoBanco);
+        Assert.Equal(request.Titulo, tarefaNoBanco!.Titulo);
+        Assert.Equal(request.Descricao, tarefaNoBanco.Descricao);
     }
 
     [Fact]
@@ -58,8 +69,11 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         };
 
         var response = await _client.PostAsJsonAsync("/api/tarefas", request);
-
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        Assert.False(await db.Tarefas.AnyAsync());
     }
 
     [Fact]
@@ -79,13 +93,13 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var request1 = new TarefaRequest
         {
             Titulo = "Primeira tarefa",
-            Descricao = "Descrição da primeira",
+            Descricao = "Descricao da primeira",
             Data = DateTime.UtcNow.AddDays(1)
         };
         var request2 = new TarefaRequest
         {
             Titulo = "Segunda tarefa",
-            Descricao = "Descrição da segunda",
+            Descricao = "Descricao da segunda",
             Data = DateTime.UtcNow.AddDays(2)
         };
 
@@ -100,6 +114,10 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(2, tarefas.Count);
         Assert.Contains(tarefas, t => t.Titulo == request1.Titulo);
         Assert.Contains(tarefas, t => t.Titulo == request2.Titulo);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        Assert.Equal(2, await db.Tarefas.CountAsync());
     }
 
     [Fact]
@@ -107,8 +125,8 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     {
         var criarRequest = new TarefaRequest
         {
-            Titulo = "Tarefa específica",
-            Descricao = "Descrição da tarefa",
+            Titulo = "Tarefa especifica",
+            Descricao = "Descricao da tarefa",
             Data = DateTime.UtcNow.AddDays(1)
         };
 
@@ -128,7 +146,6 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task ObterTarefaPorId_Inexistente_Retorna404()
     {
         var response = await _client.GetAsync("/api/tarefas/99999");
-
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -138,7 +155,7 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var criarRequest = new TarefaRequest
         {
             Titulo = "Tarefa original",
-            Descricao = "Descrição original",
+            Descricao = "Descricao original",
             Data = DateTime.UtcNow.AddDays(1)
         };
 
@@ -148,7 +165,7 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var atualizarRequest = new TarefaRequest
         {
             Titulo = "Tarefa atualizada",
-            Descricao = "Descrição atualizada",
+            Descricao = "Descricao atualizada",
             Data = DateTime.UtcNow.AddDays(2)
         };
 
@@ -160,6 +177,14 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(tarefaCriada.IdTarefa, tarefa.IdTarefa);
         Assert.Equal(atualizarRequest.Titulo, tarefa.Titulo);
         Assert.Equal(atualizarRequest.Descricao, tarefa.Descricao);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        var tarefaNoBanco = await db.Tarefas.FirstOrDefaultAsync(t => t.IdTarefa == tarefaCriada.IdTarefa);
+
+        Assert.NotNull(tarefaNoBanco);
+        Assert.Equal(atualizarRequest.Titulo, tarefaNoBanco!.Titulo);
+        Assert.Equal(atualizarRequest.Descricao, tarefaNoBanco.Descricao);
     }
 
     [Fact]
@@ -168,13 +193,16 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var atualizarRequest = new TarefaRequest
         {
             Titulo = "Tarefa inexistente",
-            Descricao = "Não deve atualizar",
+            Descricao = "Nao deve atualizar",
             Data = DateTime.UtcNow.AddDays(1)
         };
 
         var response = await _client.PutAsJsonAsync("/api/tarefas/99999", atualizarRequest);
-
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        Assert.False(await db.Tarefas.AnyAsync());
     }
 
     [Fact]
@@ -183,13 +211,12 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var criarRequest = new TarefaRequest
         {
             Titulo = "Tarefa para deletar",
-            Descricao = "Será removida",
+            Descricao = "Sera removida",
             Data = DateTime.UtcNow.AddDays(1)
         };
 
         var criarResponse = await _client.PostAsJsonAsync("/api/tarefas", criarRequest);
         var tarefaCriada = await criarResponse.Content.ReadFromJsonAsync<TarefaResponse>();
-
         var deleteRequest = new DeletarTarefaRequest { idTarefa = tarefaCriada!.IdTarefa };
         var response = await _client.SendAsync(new HttpRequestMessage
         {
@@ -203,15 +230,15 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(result);
         Assert.True(result.Sucesso);
 
-        var getResponse = await _client.GetAsync($"/api/tarefas/{tarefaCriada.IdTarefa}");
-        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        Assert.False(await db.Tarefas.AnyAsync());
     }
 
     [Fact]
     public async Task DeletarTarefa_Inexistente_Retorna404()
     {
         var deleteRequest = new DeletarTarefaRequest { idTarefa = 99999 };
-
         var response = await _client.SendAsync(new HttpRequestMessage
         {
             Method = HttpMethod.Delete,
@@ -220,5 +247,9 @@ public class TarefaIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        Assert.False(await db.Tarefas.AnyAsync());
     }
 }

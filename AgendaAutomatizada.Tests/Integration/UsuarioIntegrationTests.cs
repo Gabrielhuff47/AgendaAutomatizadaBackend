@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
+using AgendaAutomatizada.Infrastructure.Data;
 
 namespace AgendaAutomatizada.Tests.Integration;
 
@@ -26,6 +29,12 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
         return Task.CompletedTask;
     }
 
+    private static string GerarCpfAleatorio()
+    {
+        var random = new Random();
+        return string.Concat(Enumerable.Range(0, 11).Select(_ => random.Next(0, 10).ToString()));
+    }
+
     [Fact]
     public async Task CriarUsuario_ComDadosValidos_Retorna201()
     {
@@ -34,7 +43,7 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
             Nome = "João Silva",
             Email = $"joao{Guid.NewGuid()}@email.com",
             Senha = "123456",
-            Cpf = Guid.NewGuid().ToString().Substring(0, 11),
+            Cpf = GerarCpfAleatorio(),
             Telefone = "11999999999"
         };
 
@@ -46,13 +55,22 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
         Assert.Equal(request.Nome, usuario.Nome);
         Assert.Equal(request.Email, usuario.Email);
         Assert.True(usuario.IdUsuario > 0);
+
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        var usuarioNoBanco = await dbContext.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+        Assert.NotNull(usuarioNoBanco);
+        Assert.Equal(request.Nome, usuarioNoBanco!.Nome);
+        Assert.Equal(request.Cpf, usuarioNoBanco.Cpf);
+        Assert.NotEqual(request.Senha, usuarioNoBanco.SenhaHash);
     }
 
     [Fact]
     public async Task CriarUsuario_ComEmailDuplicado_Retorna409()
     {
         var email = $"duplicado{Guid.NewGuid()}@email.com";
-        var cpf = Guid.NewGuid().ToString().Substring(0, 11);
+        var cpf = GerarCpfAleatorio();
 
         var primeiroRequest = new UsuarioRequest
         {
@@ -63,19 +81,25 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
             Telefone = "11999999999"
         };
 
-        await _client.PostAsJsonAsync("/api/usuarios", primeiroRequest);
+        var primeiroResponse = await _client.PostAsJsonAsync("/api/usuarios", primeiroRequest);
+        Assert.Equal(HttpStatusCode.Created, primeiroResponse.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+            Assert.True(await db.Usuarios.AnyAsync(u => u.Email == email));
+        }
 
         var segundoRequest = new UsuarioRequest
         {
             Nome = "Maria Souza",
             Email = email,
             Senha = "123456",
-            Cpf = Guid.NewGuid().ToString().Substring(0, 11),
+            Cpf = GerarCpfAleatorio(),
             Telefone = "11988888888"
         };
 
         var response = await _client.PostAsJsonAsync("/api/usuarios", segundoRequest);
-
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
@@ -83,7 +107,7 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
     public async Task CriarUsuario_ComCpfDuplicado_Retorna409()
     {
         var email = $"cpfduplicado{Guid.NewGuid()}@email.com";
-        var cpf = Guid.NewGuid().ToString().Substring(0, 11);
+        var cpf = GerarCpfAleatorio();
 
         var primeiroRequest = new UsuarioRequest
         {
@@ -94,7 +118,14 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
             Telefone = "11999999999"
         };
 
-        await _client.PostAsJsonAsync("/api/usuarios", primeiroRequest);
+        var primeiroResponse = await _client.PostAsJsonAsync("/api/usuarios", primeiroRequest);
+        Assert.Equal(HttpStatusCode.Created, primeiroResponse.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+            Assert.True(await db.Usuarios.AnyAsync(u => u.Cpf == cpf));
+        }
 
         var segundoRequest = new UsuarioRequest
         {
@@ -106,7 +137,6 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
         };
 
         var response = await _client.PostAsJsonAsync("/api/usuarios", segundoRequest);
-
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
@@ -125,6 +155,10 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
         var response = await _client.PostAsJsonAsync("/api/usuarios", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+        Assert.False(await db.Usuarios.AnyAsync());
     }
 
     [Fact]
@@ -138,7 +172,7 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
             Nome = "João Silva",
             Email = email,
             Senha = senha,
-            Cpf = Guid.NewGuid().ToString().Substring(0, 11),
+            Cpf = GerarCpfAleatorio(),
             Telefone = "11999999999"
         };
 
@@ -182,7 +216,7 @@ public class UsuarioIntegrationTests : IClassFixture<CustomWebApplicationFactory
             Nome = "João Silva",
             Email = email,
             Senha = "123456",
-            Cpf = Guid.NewGuid().ToString().Substring(0, 11),
+            Cpf = GerarCpfAleatorio(),
             Telefone = "11999999999"
         };
 
