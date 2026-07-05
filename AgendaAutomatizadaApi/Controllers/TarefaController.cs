@@ -2,6 +2,7 @@ using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
 using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Shared;
+using AgendaAutomatizadaApi;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 
@@ -124,7 +125,7 @@ public class AtualizarTarefaEndpoint : Endpoint<TarefaRequest, TarefaResponse>
     }
 }
 
-public class DeletarTarefaEndpoint : EndpointWithoutRequest
+public class DeletarTarefaEndpoint : Endpoint<DeletarTarefaRequest, DeletarTarefaResponse>
 {
     private readonly ITarefaService _tarefaService;
 
@@ -135,20 +136,26 @@ public class DeletarTarefaEndpoint : EndpointWithoutRequest
 
     public override void Configure()
     {
-        Delete("/api/tarefas/{id}");
+        Delete("/api/tarefas/{idTarefa}");
         AllowAnonymous();
         Tags("Tarefas");
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(DeletarTarefaRequest requisicao, CancellationToken ct)
     {
-        var id = Route<int>("id");
+        var id = requisicao.idTarefa;
 
         var resultado = await _tarefaService.DeletarTarefaPorId(id);
 
         if (await resultado.SendErrorIfFailedAsync(HttpContext, ct))
             return;
 
-        await Send.ResponseAsync(null, statusCode: 204, cancellation: ct);
+        var resposta = new DeletarTarefaResponse
+        {
+            Sucesso = true,
+            Mensagem = "Tarefa deletada com sucesso"
+        };
+
+        await Send.ResponseAsync(resposta, cancellation: ct);
     }
 }

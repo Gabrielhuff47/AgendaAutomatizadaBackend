@@ -1,7 +1,6 @@
 using AgendaAutomatizada.Api.DTOs.Requests;
 using AgendaAutomatizada.Api.DTOs.Responses;
 using AgendaAutomatizada.Service.Interfaces;
-using AgendaAutomatizada.Service.Shared;
 using AgendaAutomatizadaApi.Mappers;
 using FastEndpoints;
 

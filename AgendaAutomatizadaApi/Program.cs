@@ -7,6 +7,7 @@ using AgendaAutomatizada.Infrastructure.Repositories;
 using AgendaAutomatizada.Service.Interfaces;
 using AgendaAutomatizada.Service.Services;
 using AgendaAutomatizada.Service.Shared;
+using FastEndpoints.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddFastEndpoints();
+
+builder.Services.AddFastEndpoints()
+    .SwaggerDocument(o =>
+    {
+        o.AutoTagPathSegmentIndex = 2; 
+    });
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
@@ -27,7 +32,7 @@ builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AgendaDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseSqlite(connectionString));
 
 var app = builder.Build();
 app.UseFastEndpoints(c =>
@@ -50,8 +55,7 @@ app.UseFastEndpoints(c =>
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerGen();
 }
 
 app.UseHttpsRedirection();
@@ -61,3 +65,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
