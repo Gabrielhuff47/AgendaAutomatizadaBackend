@@ -31,8 +31,18 @@ builder.Services.AddScoped<ITarefaService, TarefaService>();
 builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AgendaDbContext>(options =>
-    options.UseSqlite(connectionString));
+
+if (connectionString != null && connectionString.StartsWith("Data Source="))
+{
+    builder.Services.AddDbContext<AgendaDbContext>(options =>
+        options.UseSqlite(connectionString));
+}
+else
+{
+    var serverVersion = ServerVersion.AutoDetect(connectionString);
+    builder.Services.AddDbContext<AgendaDbContext>(options =>
+        options.UseMySql(connectionString, serverVersion));
+}
 
 var app = builder.Build();
 app.UseFastEndpoints(c =>

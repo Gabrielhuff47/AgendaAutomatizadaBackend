@@ -1,32 +1,18 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using AgendaAutomatizada.Infrastructure.Data;
 
 namespace AgendaAutomatizada.Tests.Integration;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private SqliteConnection? _connection;
+    private readonly string _dbName = $"db_agendaautomatizada_test_{Guid.NewGuid():N}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureServices(services =>
-        {
-            services.RemoveAll<DbContextOptions<AgendaDbContext>>();
-            services.RemoveAll<AgendaDbContext>();
-
-            _connection = new SqliteConnection("DataSource=:memory:");
-            _connection.Open();
-
-            services.AddDbContext<AgendaDbContext>(options =>
-            {
-                options.UseSqlite(_connection);
-            });
-        });
+        builder.UseSetting("ConnectionStrings:DefaultConnection",
+            $"Server=localhost;Port=3306;Database={_dbName};User=root;Password=@Strikes69");
     }
 
     public async Task InitializeAsync()
@@ -46,24 +32,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         await db.SaveChangesAsync();
     }
 
-    public new async Task DisposeAsync()
+    public async Task DisposeAsync()
     {
-        if (_connection != null)
+        try
         {
-            await _connection.CloseAsync();
-            await _connection.DisposeAsync();
-            _connection = null;
+            using var scope = Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+            await db.Database.EnsureDeletedAsync();
         }
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
+        catch
         {
-            _connection?.Close();
-            _connection?.Dispose();
-            _connection = null;
         }
-        base.Dispose(disposing);
     }
 }
